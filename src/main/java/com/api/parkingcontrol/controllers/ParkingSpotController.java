@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -90,5 +91,25 @@ public class ParkingSpotController {
         // Caso contrário, dela o Parking Spot e retorna a mensagem de sucesso
         parkingSpotService.delete(parkingSpotModelOptional.get());
         return ResponseEntity.status(HttpStatus.OK).body("Parking Spot successfully deleted.");
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Object> updateParkingSpot(@PathVariable(value = "id") UUID id,
+            @RequestBody @Valid ParkingSpotDto parkingSpotDto) {
+
+        Optional<ParkingSpotModel> parkingSpotModelOptional = parkingSpotService.findById(id);
+        if (!parkingSpotModelOptional.isPresent()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Parking Spot not found.");
+        }
+
+        ParkingSpotModel parkingSpotModel = new ParkingSpotModel();
+        // Converte de Dto para Model antes de Salvar no banco de dados
+        BeanUtils.copyProperties(parkingSpotDto, parkingSpotModel);
+        // Seta o id, pois o cliente não envia esse valor
+        parkingSpotModel.setId(parkingSpotModelOptional.get().getId());
+        // Seta a data, pois o cliente não envia esse valor
+        parkingSpotModel.setRegistrationDate(parkingSpotModelOptional.get().getRegistrationDate());
+
+        return ResponseEntity.status(HttpStatus.OK).body(parkingSpotService.save(parkingSpotModel));
     }
 }
